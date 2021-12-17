@@ -27,8 +27,8 @@
 #define DEFAULT_PORT 2325
 #define MODULE_NAME "Cinnamon"
 #define MAX_CONNS 16
- // sudo cat /proc/kallsyms | grep init_task
-#define MY_INIT_TASK 0xffffffff8b813780
+
+
 #define SWAPPER_LENGTH 7
 #define BUFFER_LEN 4096
 
@@ -166,9 +166,9 @@ read_again:
     }
     */
 
-    if (!skb_queue_empty(&sock->sk->sk_receive_queue))
-        pr_info("recv queue empty ? %s \n",
-                skb_queue_empty(&sock->sk->sk_receive_queue) ? "yes" : "no");
+    //if (!skb_queue_empty(&sock->sk->sk_receive_queue))
+    //    pr_info("recv queue empty ? %s \n",
+    //            skb_queue_empty(&sock->sk->sk_receive_queue) ? "yes" : "no");
 
     len = kernel_recvmsg(sock, &msg, &vec, size, size, flags);
 
@@ -177,7 +177,7 @@ read_again:
 
     tmp = inet_ntoa(&(address->sin_addr));
 
-    pr_info("client-> %s:%d, says: %s\n", tmp, ntohs(address->sin_port), buf);
+    //pr_info("client-> %s:%d, says: %s\n", tmp, ntohs(address->sin_port), buf);
 
     kfree(tmp);
     // len = msg.msg_iter.kvec->iov_len;
@@ -203,8 +203,6 @@ void read_physical_data(const void* physical_address, size_t len, char* buffer)
     {
         buffer[i] = ioread8(io + i);
     }
-
-    printk(KERN_INFO "Cinnamon: Finish Reading\n");
     iounmap(io);
 }
 
@@ -260,7 +258,6 @@ int connection_handler(void *data)
         __set_current_state(TASK_RUNNING);
         remove_wait_queue(&accept_socket->sk->sk_wq->wait, &recv_wait);
 
-        pr_info("receiving message\n");
         memset(in_buf, 0, BUFFER_LEN);
         ret = tcp_server_receive(accept_socket, id, address, in_buf, BUFFER_LEN, MSG_DONTWAIT);
         if (ret > 0)
@@ -268,15 +265,15 @@ int connection_handler(void *data)
             memset(out_buf, 0, BUFFER_LEN);
             if (memcmp(in_buf, "hola", 4) == 0)
             {
-                phys_addr_t physical_init_task = virt_to_phys(MY_INIT_TASK);
+                phys_addr_t physical_init_task = virt_to_phys( &init_task );
 
-                struct task_struct *swapper = MY_INIT_TASK;
-                size_t swapper_offset_comm = (size_t)swapper->comm - (size_t)MY_INIT_TASK;
+                struct task_struct *swapper = &init_task;
+                size_t swapper_offset_comm = (size_t)swapper->comm - (size_t)&init_task;
                 
                 printk(KERN_INFO "Cinnamon: Swapper physical address %llu\n", physical_init_task);
                 printk(KERN_INFO "Cinnamon: Swapper comm offset %lu\n", swapper_offset_comm);
 
-                read_physical_data(physical_init_task + swapper_offset_comm, SWAPPER_LENGTH, out_buf);
+                snprintf(out_buf, BUFFER_LEN, "%llu", physical_init_task);
                 pr_info("sending response: %s\n", out_buf);
                 tcp_server_send(accept_socket, id, out_buf, strlen(out_buf), MSG_DONTWAIT);
             }
@@ -299,10 +296,8 @@ int connection_handler(void *data)
                 kstrtol(in_buf + 1, 0, (long*)&position);
                 kstrtol(second_v + 1, 0, (long*)&length);
 
-                pr_info("sending response: %lu %lu\n", position, length);
-
                 read_physical_data(position, length, out_buf);
-                tcp_server_send(accept_socket, id, out_buf, strlen(out_buf), MSG_DONTWAIT);
+                tcp_server_send(accept_socket, id, out_buf, length, MSG_DONTWAIT);
             }
         }
     }
