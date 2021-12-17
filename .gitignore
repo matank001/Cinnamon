@@ -10,7 +10,8 @@
 # Normal rules
 #
 profile/
-.*
+*.cmd
+*.log
 *.o
 *.o.*
 *.a
