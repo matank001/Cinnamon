@@ -9,14 +9,14 @@
 
 ## Run volatility
 
-* You can create profile using "create_profile.sh". the output will be in profile/ folder.
-Copy the profile to volatility folder (*usually volatility/volatility/plugins/overlays/linux*)
-* for using volatility: **vol.py -l 127.0.0.1::2325 --profile=Linuxubuntu20x64 linux_pslist**
+* You can create profile using "create_profile.sh". the output will be in *profile/* folder.
+Copy the profile to volatility folder (usually *volatility/volatility/plugins/overlays/linux*)
+* For using volatility: **vol.py -l 127.0.0.1::2325 --profile=Linuxubuntu20x64 linux_pslist**
 
 ## Client Features
 * For simple client you can run **nc localhost 2325**
 
 Current API:
-* hola: SENDs swapper string
-* bye: disconnect
-* vXXXXXvXXX: v[POSTION]v[LENGTH] read bytes from position
+* hola: Get "swapper" (init_task) physical address
+* bye: Disconnect
+* vXXXXXvXXX: v[POSTION]v[LENGTH] Read bytes from position
