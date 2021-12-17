@@ -15,6 +15,7 @@
 
 #include <linux/unistd.h>
 #include <linux/wait.h>
+#include <linux/string.h>
 
 #include <net/sock.h>
 #include <net/tcp.h>
@@ -264,27 +265,44 @@ int connection_handler(void *data)
         ret = tcp_server_receive(accept_socket, id, address, in_buf, BUFFER_LEN, MSG_DONTWAIT);
         if (ret > 0)
         {
-            if (memcmp(in_buf, "HOLA", 4) == 0)
+            memset(out_buf, 0, BUFFER_LEN);
+            if (memcmp(in_buf, "hola", 4) == 0)
             {
                 phys_addr_t physical_init_task = virt_to_phys(MY_INIT_TASK);
 
                 struct task_struct *swapper = MY_INIT_TASK;
                 size_t swapper_offset_comm = (size_t)swapper->comm - (size_t)MY_INIT_TASK;
-
+                
+                printk(KERN_INFO "Cinnamon: Swapper physical address %llu\n", physical_init_task);
                 printk(KERN_INFO "Cinnamon: Swapper comm offset %lu\n", swapper_offset_comm);
 
-                memset(out_buf, 0, BUFFER_LEN);
                 read_physical_data(physical_init_task + swapper_offset_comm, SWAPPER_LENGTH, out_buf);
                 pr_info("sending response: %s\n", out_buf);
                 tcp_server_send(accept_socket, id, out_buf, strlen(out_buf), MSG_DONTWAIT);
             }
-            if (memcmp(in_buf, "ADIOS", 5) == 0)
+            if (memcmp(in_buf, "bye", 3) == 0)
             {
-                memset(out_buf, 0, BUFFER_LEN);
-                strcat(out_buf, "ADIOSAMIGO");
+                strcat(out_buf, "ADIOS AMIGO");
                 pr_info("sending response: %s\n", out_buf);
                 tcp_server_send(accept_socket, id, out_buf, strlen(out_buf), MSG_DONTWAIT);
                 break;
+            }
+            if (in_buf[0] == 'v')
+            {
+
+                char* second_v = strchr(in_buf + 1, 'v');
+                second_v[0] = 0;
+
+                long position;
+                long length;
+
+                kstrtol(in_buf + 1, 0, (long*)&position);
+                kstrtol(second_v + 1, 0, (long*)&length);
+
+                pr_info("sending response: %lu %lu\n", position, length);
+
+                read_physical_data(position, length, out_buf);
+                tcp_server_send(accept_socket, id, out_buf, strlen(out_buf), MSG_DONTWAIT);
             }
         }
     }
