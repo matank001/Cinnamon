@@ -29,6 +29,7 @@
  // sudo cat /proc/kallsyms | grep init_task
 #define MY_INIT_TASK 0xffffffff8b813780
 #define SWAPPER_LENGTH 7
+#define BUFFER_LEN 4096
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Cinnamon Group");
@@ -182,6 +183,31 @@ read_again:
     return len;
 }
 
+void read_physical_data(const void* physical_address, size_t len, char* buffer)
+{
+    size_t i;
+    if (len > BUFFER_LEN)
+    {
+        printk(KERN_INFO "Cinnamon: Len is TOO BIG\n");
+    }
+    
+    void *__iomem io = ioremap(physical_address, len);
+
+    if (io == NULL)
+    {
+        printk(KERN_INFO "Cinnamon: Failed obtain ioremap\n");
+    }
+
+    for (i = 0; i < len; i++)
+    {
+        buffer[i] = ioread8(io + i);
+    }
+
+    printk(KERN_INFO "Cinnamon: Finish Reading\n");
+    iounmap(io);
+}
+
+
 int connection_handler(void *data)
 {
     struct tcp_conn_handler_data *conn_data =
@@ -192,17 +218,15 @@ int connection_handler(void *data)
     int id = conn_data->thread_id;
 
     int ret;
-    int len = 49;
-    unsigned char in_buf[len + 1];
-    unsigned char out_buf[len + 1];
-    // char *tmp;
+
+    unsigned char in_buf[BUFFER_LEN];
+    unsigned char out_buf[BUFFER_LEN];
 
     DECLARE_WAITQUEUE(recv_wait, current);
     allow_signal(SIGKILL | SIGSTOP);
 
     while (1)
     {
-
         add_wait_queue(&accept_socket->sk->sk_wq->wait, &recv_wait);
 
         while (skb_queue_empty(&accept_socket->sk->sk_receive_queue))
@@ -215,20 +239,13 @@ int connection_handler(void *data)
                 pr_info(" *** mtp | tcp server handle connection "
                         "thread stopped | connection_handler *** \n");
 
-                // tcp_conn_handler->thread[id] = NULL;
                 tcp_conn_handler->tcp_conn_handler_stopped[id] = 1;
 
                 __set_current_state(TASK_RUNNING);
-                remove_wait_queue(&accept_socket->sk->sk_wq->wait,
-                                  &recv_wait);
+                remove_wait_queue(&accept_socket->sk->sk_wq->wait, &recv_wait);
                 kfree(tcp_conn_handler->data[id]->address);
                 kfree(tcp_conn_handler->data[id]);
                 sock_release(tcp_conn_handler->data[id]->accept_socket);
-                /*
-                tcp_conn_handler->thread[id] = NULL;
-                sock_release(sock);
-                do_exit(0);
-                */
                 return 0;
             }
 
@@ -243,21 +260,27 @@ int connection_handler(void *data)
         remove_wait_queue(&accept_socket->sk->sk_wq->wait, &recv_wait);
 
         pr_info("receiving message\n");
-        memset(in_buf, 0, len + 1);
-        ret = tcp_server_receive(accept_socket, id, address, in_buf, len, MSG_DONTWAIT);
+        memset(in_buf, 0, BUFFER_LEN);
+        ret = tcp_server_receive(accept_socket, id, address, in_buf, BUFFER_LEN, MSG_DONTWAIT);
         if (ret > 0)
         {
             if (memcmp(in_buf, "HOLA", 4) == 0)
             {
-                memset(out_buf, 0, len + 1);
-                strcat(out_buf, "HOLASI");
+                phys_addr_t physical_init_task = virt_to_phys(MY_INIT_TASK);
+
+                struct task_struct *swapper = MY_INIT_TASK;
+                size_t swapper_offset_comm = (size_t)swapper->comm - (size_t)MY_INIT_TASK;
+
+                printk(KERN_INFO "Cinnamon: Swapper comm offset %lu\n", swapper_offset_comm);
+
+                memset(out_buf, 0, BUFFER_LEN);
+                read_physical_data(physical_init_task + swapper_offset_comm, SWAPPER_LENGTH, out_buf);
                 pr_info("sending response: %s\n", out_buf);
-                tcp_server_send(accept_socket, id, out_buf,
-                                strlen(out_buf), MSG_DONTWAIT);
+                tcp_server_send(accept_socket, id, out_buf, strlen(out_buf), MSG_DONTWAIT);
             }
             if (memcmp(in_buf, "ADIOS", 5) == 0)
             {
-                memset(out_buf, 0, len + 1);
+                memset(out_buf, 0, BUFFER_LEN);
                 strcat(out_buf, "ADIOSAMIGO");
                 pr_info("sending response: %s\n", out_buf);
                 tcp_server_send(accept_socket, id, out_buf, strlen(out_buf), MSG_DONTWAIT);
@@ -379,35 +402,7 @@ int tcp_server_accept(void)
 
         kfree(tmp);
 
-        /*
-        memset(in_buf, 0, len+1);
-        pr_info("receive the package\n");
-        */
         pr_info("handle connection\n");
-
-        /*
-        while((accept_err = tcp_server_receive(accept_socket, in_buf,\
-                                        len, MSG_DONTWAIT)))
-        {*/
-        /* not needed here
-        if(kthread_should_stop())
-        {
-                pr_info(" *** mtp | tcp server acceptor thread "
-                        "stopped | tcp_server_accept *** \n");
-                tcp_acceptor_stopped = 1;
-                do_exit(0);
-        }
-        */
-        /*
-               if(accept_err == 0)
-                       continue;
-               memset(out_buf, 0, len+1);
-               strcat(out_buf, "kernel server: hi");
-               pr_info("sending the package\n");
-               tcp_server_send(accept_socket, out_buf, strlen(out_buf),\
-                               MSG_DONTWAIT);
-       }
-       */
 
         /*should I protect this against concurrent access?*/
         for (id = 0; id < MAX_CONNS; id++)
@@ -450,13 +445,11 @@ int tcp_server_accept(void)
     }
 
     tcp_acceptor_stopped = 1;
-    // return 0;
     do_exit(0);
 release:
     sock_release(accept_socket);
 err:
     tcp_acceptor_stopped = 1;
-    // return -1;
     do_exit(0);
 }
 
@@ -474,7 +467,7 @@ int tcp_server_listen(void)
     // spin_unlock(&tcp_server_lock);
 
     server_err = sock_create(PF_INET, SOCK_STREAM, IPPROTO_TCP,
-                             &tcp_server->listen_socket);
+                            &tcp_server->listen_socket);
     if (server_err < 0)
     {
         pr_info(" *** mtp | Error: %d while creating tcp server "
@@ -493,7 +486,7 @@ int tcp_server_listen(void)
 
     server_err =
         conn_socket->ops->bind(conn_socket, (struct sockaddr *)&server,
-                               sizeof(server));
+                            sizeof(server));
 
     if (server_err < 0)
     {
@@ -527,22 +520,15 @@ int tcp_server_listen(void)
         {
             pr_info(" *** mtp | tcp server listening thread"
                     " stopped | tcp_server_listen *** \n");
-            /*
-            tcp_listener_stopped = 1;
-            sock_release(conn_socket);
-            do_exit(0);
-            */
             return 0;
         }
 
         if (signal_pending(current))
             goto release;
     }
-    //}
 
     sock_release(conn_socket);
     tcp_listener_stopped = 1;
-    // return 0;
     do_exit(0);
 release:
     sock_release(conn_socket);
@@ -556,7 +542,7 @@ int tcp_server_start(void)
 {
     tcp_server->running = 1;
     tcp_server->thread = kthread_run((void *)tcp_server_listen, NULL,
-                                     MODULE_NAME);
+                                    MODULE_NAME);
     return 0;
 }
 
@@ -638,35 +624,12 @@ static void network_server_exit(void)
 int init_module(void)
 {
     size_t i;
-    void __iomem *io;
+    
     printk(KERN_INFO "Cinnamon: Hello world\n");
 
     network_server_init();
 
-    phys_addr_t physical_init_task = virt_to_phys(MY_INIT_TASK);
-    printk(KERN_INFO "Cinnamon: Physical Address: %llu\n", physical_init_task);
-
-    struct task_struct *swapper = MY_INIT_TASK;
-    size_t swapper_offset_comm = (size_t)swapper->comm - (size_t)MY_INIT_TASK;
-
-    printk(KERN_INFO "Cinnamon: Swapper comm offset %lu\n", swapper_offset_comm);
-
-    io = ioremap(physical_init_task, 4096);
-
-    if (io == NULL)
-    {
-        printk(KERN_INFO "Cinnamon: Failed obtain ioremap\n");
-        return 0;
-    }
-
-    for (i = swapper_offset_comm; i < swapper_offset_comm + SWAPPER_LENGTH; i++)
-    {
-        char current_char = (char)ioread8(io + i);
-        printk(KERN_INFO "%c", current_char);
-    }
-
-    printk(KERN_INFO "Cinnamon: Finish Writing\n");
-    iounmap(io);
+    
     return 0;
 }
 
