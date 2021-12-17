@@ -1,10 +1,10 @@
 # Cinnamon
-Linux introspection utility
+*Linux introspection utility*
 
 ## Running the module
 
 * I used ubuntu20.04, you probably should use too because of kernel header.
-* To watch the output use the **dmesg -wH" command**
+* To watch the output use the **dmesg -wH** command
 * For running the module just use the **make_load_unload.sh**
 
 ## Run volatility
