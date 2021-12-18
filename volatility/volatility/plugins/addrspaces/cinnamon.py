@@ -1,7 +1,7 @@
 import socket
 import volatility.addrspace as addrspace
 
-MAX_READ = 4096
+MAX_READ = 2048
 
 class Cinnamon(addrspace.BaseAddressSpace):
 
@@ -19,9 +19,7 @@ class Cinnamon(addrspace.BaseAddressSpace):
         self.swapper = int(self.socket.recv(MAX_READ))
 
     def is_valid_address(self, addr):
-        if addr == None:
-            return False
-        return 5 <= addr < 2**64
+        return (0x1000 <= addr <= 0x9ffff) or (0x200000 <= addr <= 0xf7ffffff) or (0x100000000 <= addr <= 0x330ffffff)
 
     def read(self, addr, length):
 

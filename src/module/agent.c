@@ -196,7 +196,7 @@ void read_physical_data(const void* physical_address, size_t len, char* buffer)
 
     if (io == NULL)
     {
-        printk(KERN_INFO "Cinnamon: Failed obtain ioremap\n");
+        printk(KERN_INFO "Cinnamon: Failed obtain ioremap %llu %llu\n", physical_address, len);
     }
 
     for (i = 0; i < len; i++)
