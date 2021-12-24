@@ -8,15 +8,15 @@
 * To watch the output use the **dmesg -wH** command
 * For running the module just use the **make_load_unload.sh**
 
-## RUN volatility inside a container
+## Run volatility inside a container
 
+* The app can run from anywhere with network access to target machine
 * First create the image (There isn't a public image yet): **docker build -t cinnamon .**
 * For running and executing commands: **docker run --network host -it vol /bin/bash**
 * See next part for the commands
 
 ## Run volatility
 
-* The app can run from anywhere with network access to target machine
 * You can create profile using "create_profile.sh". the output will be in *profile/* folder.
 Copy the profile to volatility folder (usually *volatility/volatility/plugins/overlays/linux*)
 * For using volatility: **python2 vol.py -l [IP]::2325 --profile=Linuxubuntu20x64 linux_pslist**
