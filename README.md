@@ -1,17 +1,25 @@
 # Cinnamon
 *Linux introspection utility*
 
-## Running the module
+## Loading the module (on target machine)
 
+* The module should run inside the target machine
 * I used ubuntu20.04, you probably should use too because of kernel header.
 * To watch the output use the **dmesg -wH** command
 * For running the module just use the **make_load_unload.sh**
 
+## RUN volatility inside a container
+
+* First create the image (There isn't a public image yet): **docker build -t cinnamon .**
+* For running and executing commands: **docker run --network host -it vol /bin/bash**
+* See next part for the commands
+
 ## Run volatility
 
+* The app can run from anywhere with network access to target machine
 * You can create profile using "create_profile.sh". the output will be in *profile/* folder.
 Copy the profile to volatility folder (usually *volatility/volatility/plugins/overlays/linux*)
-* For using volatility: **vol.py -l 127.0.0.1::2325 --profile=Linuxubuntu20x64 linux_pslist**
+* For using volatility: **python2 vol.py -l [IP]::2325 --profile=Linuxubuntu20x64 linux_pslist**
 
 ## Client Features
 * For simple client you can run **nc localhost 2325**
