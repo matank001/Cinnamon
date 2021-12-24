@@ -43,7 +43,7 @@ nosetests.xml
 .DS_Store
 
 # compressed files
-*.zip
+#*.zip
 *.7z
 *.rar
 *.tar.gz
