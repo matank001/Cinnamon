@@ -12,7 +12,7 @@
 
 * The app can run from anywhere with network access to target machine
 * First create the image (There isn't a public image yet): **docker build -t cinnamon .**
-* For running and executing commands: **docker run --network host -it vol /bin/bash**
+* For running and executing commands: **docker run --network host -it cinnamon /bin/bash**
 * See next part for the commands
 
 ## Run volatility
@@ -28,3 +28,8 @@ Current API:
 * hola: Get "swapper" (init_task) physical address
 * bye: Disconnect
 * vXXXXXvXXX: v[POSTION]v[LENGTH] Read bytes from position
+
+## TODO
+* Finish the investegatee docketfile
+* Change the docker run execution args to network bridge and add -p (enalbe containers to ssh to one another)
+* finish checking the automation process
