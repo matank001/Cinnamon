@@ -1,10 +1,7 @@
-#!/bin/bash
-
 mkdir profile
-cd profile
-
-#git clone https://github.com/volatilityfoundation/volatility.git
+echo 'Done making...'
 cd volatility/tools/linux/ && make
 cd ../../../
-zip $(lsb_release -i -s)_$(uname -r)_profile.zip ./volatility/tools/linux/module.dwarf /boot/System.map-$(uname -r)
-rm -rf ./volatility
+cd profile
+echo 'Done making...'
+zip $(lsb_release -i -s)_$(uname -r)_profile.zip ../volatility/tools/linux/module.dwarf /boot/System.map-$(uname -r)
