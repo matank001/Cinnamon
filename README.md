@@ -15,6 +15,14 @@
 * For running and executing commands: **docker run --network host -it cinnamon /bin/bash**
 * See next part for the commands
 
+## Execute automate remote setup 
+
+* Insted of running and coping scripts you could use our automated tool insted!
+run the following commad **python remote_init.py <remote_ip> <strong_user> <strong_user_pass>** and then you will get an output as a result of running the command
+* The out output will be the command that you can see in the *Run volatility* secion (to run plugins remotly)
+The output will look like the followin: **python2 vol.py -l <remote_ip>::2325 --profile=Linux<remote_ip><strong_user><strong_user_pass>x64 linux_pslist**
+
+
 ## Run volatility
 
 * You can create profile using "create_profile.sh". the output will be in *profile/* folder.
@@ -29,7 +37,3 @@ Current API:
 * bye: Disconnect
 * vXXXXXvXXX: v[POSTION]v[LENGTH] Read bytes from position
 
-## TODO
-* Finish the investegatee docketfile
-* Change the docker run execution args to network bridge and add -p (enalbe containers to ssh to one another)
-* finish checking the automation process
