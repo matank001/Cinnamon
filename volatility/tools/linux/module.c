@@ -628,3 +628,4 @@ struct mount {
 
 struct resource resource;
 
+MODULE_LICENSE("GPL");

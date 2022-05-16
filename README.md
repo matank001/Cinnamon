@@ -12,8 +12,16 @@
 
 * The app can run from anywhere with network access to target machine
 * First create the image (There isn't a public image yet): **docker build -t cinnamon .**
-* For running and executing commands: **docker run --network host -it vol /bin/bash**
+* For running and executing commands: **docker run --network host -it cinnamon /bin/bash**
 * See next part for the commands
+
+## Execute automate remote setup 
+
+* Insted of running and coping scripts you could use our automated tool insted!
+run the following commad **python remote_init.py <remote_ip> <strong_user> <strong_user_pass>** and then you will get an output as a result of running the command
+* The out output will be the command that you can see in the *Run volatility* secion (to run plugins remotly)
+The output will look like the followin: **python2 vol.py -l <remote_ip>::2325 --profile=Linux<remote_ip><strong_user><strong_user_pass>x64 linux_pslist**
+
 
 ## Run volatility
 
@@ -28,3 +36,4 @@ Current API:
 * hola: Get "swapper" (init_task) physical address
 * bye: Disconnect
 * vXXXXXvXXX: v[POSTION]v[LENGTH] Read bytes from position
+
