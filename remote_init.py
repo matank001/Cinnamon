@@ -35,7 +35,7 @@ def main():
     profile_name = "".join([args.remote_addr.replace('.', '_'), args.root_username])
 
     os.system('cp profile/*_profile.zip volatility/plugins/overlays/linux/{0}.zip'.format(profile_name))
-    print('run this -> python2 vol.py -l 192.168.110.128::2325 --profile=Linux{0}x64 linux_pslist'.format(profile_name))
+    print('run this -> python2 vol.py -l {0}::2325 --profile=Linux{1}x64 linux_pslist'.format(args.remote_addr, profile_name))
 
 if __name__ == '__main__':
     main()
