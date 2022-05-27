@@ -20,7 +20,8 @@ def main():
 		print("file is: " + file[0])
 		print("full path is: " + file[1])
 		read_file = pd.read_excel(file[1])
-		read_file.to_csv("temp/" + file[0] + ".csv", index = None, header=True)
+		read_file.to_csv("../data/fwd/vol_out/" + file[0] + ".csv", index = None, header=True)
+
 		#send_to_splunk()
 		
 main()
