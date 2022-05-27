@@ -1,0 +1,9 @@
+1. cat ./splunk.zip* > splunk.zip
+2. unzip splunk.zip -d splunk
+3. ./install_splunk.sh (maybe have to replace CLRF to LF)
+
+
+4. cd volatility
+5. python2 vol.py -l 127.0.0.1::2325 --profile=Linux127_0_0_1ozx64 linux_pslist --output=xlsx --output-file=output/pslist.xlsx
+6. python splunk/scripts/upload_files.py -d output
+
