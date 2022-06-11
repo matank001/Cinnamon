@@ -2,6 +2,6 @@
 
 cd src/module
 
-sudo rmmod agent.ko
+echo $1 | sudo -S rmmod agent.ko
 make
-sudo insmod agent.ko
+echo $1 | sudo -S insmod agent.ko

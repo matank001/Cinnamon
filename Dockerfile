@@ -13,8 +13,10 @@ COPY remote_init.py .
 COPY make_load_unload.sh .
 COPY create_profile.sh .
 
-COPY volatility .
+COPY volatility /vol/volatility
 COPY src /vol/src
 run cd volatility
 run mkdir profile
 run chmod 777 profile
+run mkdir output
+run chmod 777 output
